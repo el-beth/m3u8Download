@@ -3,6 +3,7 @@
 # call as ./script.sh <M3U8 playlist URL> -r (720|480|1080) [ -s <url to playlist file that contains .ts> ] [ -o <filename for output> ] [-t <tmpdir name for previously interrupted download>]
 # this script relies upon ffmpeg, pcregrep - one that supports multiline regular expressions
 # 1. get the playlist
+# TODO, some m3u8 playlists are intended to be used by someone who knows the main domain, therefore they come as partial URLs
 regex1080='^(\#EXT-X-STREAM-INF:PROGRAM-ID=[0-9]+,BANDWIDTH=[0-9]+,RESOLUTION=(19[12][890123]x[0-9]+|[0-9]+x10[78][7890123]),FRAME-RATE=[0-9]+(\.[0-9]+)?,CODECS="[^"]+"\n)(https:\/\/.+)'
 regex720='^(\#EXT-X-STREAM-INF:PROGRAM-ID=[0-9]+,BANDWIDTH=[0-9]+,RESOLUTION=(12[78][7890]x[0-9]+|[0-9]+x7[12][7890]),FRAME-RATE=[0-9]+(\.[0-9]+)?,CODECS="[^"]+"\n)(https:\/\/.+)';
 regex480='^(\#EXT-X-STREAM-INF:PROGRAM-ID=[0-9]+,BANDWIDTH=[0-9]+,RESOLUTION=(8[45][890123]x[0-9]+|[0-9]+x4[78][7890]),FRAME-RATE=[0-9]+(\.[0-9]+)?,CODECS="[^"]+"\n)(https:\/\/.+)';
