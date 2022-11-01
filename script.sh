@@ -2,6 +2,7 @@
 
 # call as ./script.sh <M3U8 playlist URL> -r (720|480|1080) [ -s <url to playlist file that contains .ts> ] [ -o <filename for output> ]
 # this script relies upon pcregrep - one that supports multiline regular expressions
+#                         ffmpeg
 # 1. get the playlist
 res1080="false";
 res720="false";
@@ -37,6 +38,11 @@ hlsPlaylist="$(wget -q -O - "$url" | egrep -ioe 'https?:\/\/[^ ]+')"
 [ -z "$hlsPlaylist" ] && exit 3;
 outputName=$(egrep -ioe ' -o(=| +)([^ ]+)' <<< "$@" | sed -Ee 's/ -o(=| +)([^ ]+)/\2/g');
 [ -z "$outputName" ] && outputName="vid_$RANDOM.ts";
+tmpDir="$RANDOM";
+echo "temp dir is $tmpDir";
+mkdir "$tmpDir" && cd "$tmpDir";
+currDir="$(pwd | egrep -ioe [0-9]+$)";
+[ "$currDir" != "$tmpDir" ] && echo "failed to create and/or navigate to temporary directory" && exit 4;
 i=0;
 while read seg
 	do
@@ -44,7 +50,7 @@ while read seg
 		i=$((++i));
 done <<< "$hlsPlaylist"
 
-# determine if space is enough for appendment
+# determine if space is enough for appending and transcoding
 segs=$(ls -v {0..9999}.ts 2> /dev/null);
 
 while read seg
@@ -53,6 +59,6 @@ while read seg
 done <<< "$segs"
 
 ffmpeg -i file.ts -c copy "$outputName" && rm file.ts;
+mv "$outputName" ../;
+cd ../;
 echo "video file saved as $outputName" && exit 0;
-
-
