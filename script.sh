@@ -26,6 +26,10 @@ function filterURL(){
 	url="$([ "$res1080" == "true" ] && pcregrep -M "$regex1080" <<< "$page" | egrep -m 1 -ioe 'https:\/\/[^ ]+\.m3u8')" && return 0;
 	[ -z "$url" ] && return 1;
 }
+
+# function parseArguments(){
+# 	# here go the statements for detecting which arguments have been passed to the script
+# }
 # there are two types of m3u8 files, the first contain the urls for multiple playlists. Each playlist in
 # these playlists is an m3u8 file, each playlist will have an inline specified BW and resolution, the ff
 # regular expression chooses the 720p resolution playlist
