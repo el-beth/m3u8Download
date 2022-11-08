@@ -55,7 +55,7 @@ done <<< "$hlsPlaylist"
 # determine if space is enough for appending and transcoding
 freeSpace="$(df --output='avail' . | egrep -ioe '^[0-9]+')";
 neededSpace="$((2*$(du -s . | egrep -ioe '^[0-9]+')))";
-[ "$freeSpace" -lt "$neededSpace" ] && echo "free more space and run with -t $tmpDir" && exit 5;
+[ "$freeSpace" -lt "$neededSpace" ] && echo "free more space and run with '-t $tmpDir'" && exit 5;
 segs=$(ls -v {0..9999}.ts 2> /dev/null);
 
 while read seg
