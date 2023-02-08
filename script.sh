@@ -62,7 +62,7 @@ function processIndex(){
 				fi
 				i=$((++i));
 			done <<< `egrep -ve '^\#.+' <<< $segmentsFile`;
-			[ -f temp.vid ] && mv temp.vid "$outputName" && echo "[success]: completed the download, file name $outputName"
+			[ -f temp.vid ] && ffmpeg -i temp.vid -c copy "$outputName" &> /dev/null && rm temp.vid && echo "[success]: completed the download, file name $outputName" && return 0;
 			;;
 		"segments" )
 			selectionUrl=$url;
@@ -83,7 +83,7 @@ function processIndex(){
 				fi
 				i=$((++i));
 			done <<< `egrep -ve '^\#.+' <<< $segmentsFile`;
-			mv temp.vid "$outputName" && echo "[success]: completed the download, file name $outputName"
+			[ -f temp.vid ] && ffmpeg -i temp.vid -c copy "$outputName" &> /dev/null && rm temp.vid && echo "[success]: completed the download, file name $outputName" && return 0;
 			;;
 	esac
 }
