@@ -13,6 +13,7 @@ indexClass="";
 multivarChoice="";
 segmentsFile="";
 outputName=`egrep -ioe '(-o|--output)(=| )?([^ ]+)' <<< "$@" | sed -Ee 's/(-o|--output)(=| )?([^ ]+)/\3/gi';`
+[ -z "$outputName" ] && echo "[error]: \$outputName is empty";
 [ -z "$url" ] && echo "[error]: the calling string is not a valid http or https URL" && exit 1;
 function fetch(){
 	page=`wget -q -O - "$url"`;
@@ -29,6 +30,7 @@ function classifyIndexFile(){
 function processIndex(){
 	case "$indexClass" in
 		"multivar" )
+			echo "[info]: index file is multivariant manifest"
 			echo "[info]: the index file is a multivariant index";
 			echo "[input]: choose a variant:";
 			i=1;
@@ -54,17 +56,28 @@ function processIndex(){
 			fi
 			while read segmentUrl;
 			do
-				if (wget -q -O - "${urlBase}${segmentUrl}" >> temp.vid);
+				if (! egrep -qe '^https?://.+' <<< "$segmentUrl")
 					then
-						echo "[info]: got segment $i";
+						if (wget -q -O - "${urlBase}${segmentUrl}" >> temp.vid);
+							then
+								echo "[info]: got segment $i";
+							else
+								echo "[exit]: fatal error when downloading segment $i" && exit 1
+						fi
 					else
-						echo "[exit]: fatal error when downloading segment $i" && exit 1
+						if (wget -q -O - "$segmentUrl" >> temp.vid);
+							then
+								echo "[info]: got segment $i";
+							else
+								echo "[exit]: fatal error when downloading segment $i" && exit 1
+						fi
 				fi
 				i=$((++i));
 			done <<< `egrep -ve '^\#.+' <<< $segmentsFile`;
 			[ -f temp.vid ] && ffmpeg -i temp.vid -c copy "$outputName" &> /dev/null && rm temp.vid && echo "[success]: completed the download, file name $outputName" && return 0;
 			;;
 		"segments" )
+			echo "[info]: index file is TS segment manifest"
 			selectionUrl=$url;
 			segmentsFile=`wget -q -O - "$selectionUrl"`;
 			i=1;
@@ -75,11 +88,21 @@ function processIndex(){
 			
 			while read segmentUrl;
 			do
-				if (wget -q -O - "${urlBase}${segmentUrl}" >> temp.vid);
+				if (! egrep -qe '^https?://.+' <<< "$segmentUrl")
 					then
-						echo "[info]: got segment $i";
+						if (wget -q -O - "${urlBase}${segmentUrl}" >> temp.vid);
+							then
+								echo "[info]: got segment $i";
+							else
+								echo "[exit]: fatal error when downloading segment $i" && exit 1
+						fi
 					else
-						echo "[exit]: fatal error when downloading segment $i" && exit 1
+						if (wget -q -O - "$segmentUrl" >> temp.vid);
+							then
+								echo "[info]: got segment $i";
+							else
+								echo "[exit]: fatal error when downloading segment $i" && exit 1
+						fi
 				fi
 				i=$((++i));
 			done <<< `egrep -ve '^\#.+' <<< $segmentsFile`;
