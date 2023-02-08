@@ -7,6 +7,7 @@
 
 url=`egrep -ioe 'https?:\/\/[^ ]+' <<< "$@"`;
 urlBase=`sed -Ee 's/^(.+\/).+?$/\1/gi' <<< "$url"`;
+([ -z "$urlBase" ] || [ -z "$url" ]) && echo "[error]: malformed URL" && exit 1;
 page="";
 indexClass="";
 multivarChoice="";
@@ -42,7 +43,7 @@ function processIndex(){
 				echo "[inputError]: input only a single number";
 				read -N 1 multivarChoice;
 			done
-			var=$(egrep -ioe '\#EXT-X-STREAM-INF *: *(PROGRAM-ID=([0-9]+)|BANDWIDTH=([^,]+)|RESOLUTION=([0-9]+x[0-9]+)|CODECS="([^"]+)"|FRAME-RATE=([0-9\.]+)|,)+' <<< "$page" | sed -n "${multivarChoice}p");
+			var=$(egrep -ioe '\#EXT-X-STREAM-INF *: *(PROGRAM-ID=([0-9]+)|BANDWIDTH=([^,]+)|RESOLUTION=([0-9]+x[0-9]+)|CODECS="([^"]+)"|FRAME-RATE=([0-9\.]+)|,|.+)+' <<< "$page" | sed -n "${multivarChoice}p");
 			selectionUrl=`pcregrep -M "${var}\n.+" <<< "$page" | tail -n 1`;
 			egrep -qie '^https?:\/\/.+$' <<< "$selectionUrl" || selectionUrl="${urlBase}${selectionUrl}";
 			segmentsFile=`wget -q -O - "$selectionUrl"`;
@@ -51,7 +52,6 @@ function processIndex(){
 				then 
 					rm temp.vid;
 			fi
-
 			while read segmentUrl;
 			do
 				if (wget -q -O - "${urlBase}${segmentUrl}" >> temp.vid);
@@ -72,7 +72,7 @@ function processIndex(){
 				then
 					rm temp.vid;
 			fi
-
+			
 			while read segmentUrl;
 			do
 				if (wget -q -O - "${urlBase}${segmentUrl}" >> temp.vid);
