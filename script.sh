@@ -7,7 +7,8 @@
 
 # TODO: help syntax output
 # TODO: output name can contain space/s
-# TODO: Use ETag for the m3u8 as a session identifier and 
+# TODO: Use ETag for the m3u8 as a session identifier, then fall back to md5sum of the TS file, and only use $RANDOM as a last resort if no identifier can be found in the HTTP reply headers.
+# TODO: doing the above to make continuing a download possible.
 url=`egrep -ioe 'https?:\/\/[^ ]+' <<< "$@"`;
 urlBase=`sed -Ee 's/^(.+\/).+?$/\1/gi' <<< "$url"`;
 ([ -z "$urlBase" ] || [ -z "$url" ]) && echo "[error]: malformed URL" && exit 1;
