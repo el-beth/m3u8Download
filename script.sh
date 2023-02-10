@@ -7,6 +7,7 @@
 
 # TODO: help syntax output
 # TODO: output name can contain space/s
+# TODO: Use ETag for the m3u8 as a session identifier and 
 url=`egrep -ioe 'https?:\/\/[^ ]+' <<< "$@"`;
 urlBase=`sed -Ee 's/^(.+\/).+?$/\1/gi' <<< "$url"`;
 ([ -z "$urlBase" ] || [ -z "$url" ]) && echo "[error]: malformed URL" && exit 1;
@@ -41,7 +42,7 @@ function processIndex(){
 				do
 					echo "$i: $choice";
 					i=$((++i));
-			done <<< `egrep -ioe '\#EXT-X-STREAM-INF *: *(PROGRAM-ID=([0-9]+)|BANDWIDTH=([^,]+)|RESOLUTION=([0-9]+x[0-9]+)|CODECS="([^"]+)"|FRAME-RATE=([0-9\.]+)|,)+' <<< "$page" | sed -Ee 's/\#EXT-X-STREAM-INF *: *(PROGRAM-ID=([0-9]+)|BANDWIDTH=([^,]+)|RESOLUTION=([0-9]+x[0-9]+)|CODECS="([^"]+)"|FRAME-RATE=([0-9\.]+)|,)+/Resolution: \4, CoDecs: \5, Framerate: \6/gi'`;
+			done <<< `egrep -ioe '\#EXT-X-STREAM-INF *: *(PROGRAM-ID=([0-9]+)|BANDWIDTH=([^,]+)|RESOLUTION=([0-9]+x[0-9]+)|CODECS="([^"]+)"|FRAME-RATE=([0-9\.]+)| *, *)+' <<< "$page" | sed -Ee 's/\#EXT-X-STREAM-INF *: *//gi'`;
 			read -N 1 multivarChoice;
 			while ( ! egrep -qe '^[0-9]$' <<< "$multivarChoice" )
 			do
@@ -51,6 +52,7 @@ function processIndex(){
 			var=$(egrep -ioe '\#EXT-X-STREAM-INF *: *(PROGRAM-ID=([0-9]+)|BANDWIDTH=([^,]+)|RESOLUTION=([0-9]+x[0-9]+)|CODECS="([^"]+)"|FRAME-RATE=([0-9\.]+)|,|.+)+' <<< "$page" | sed -n "${multivarChoice}p");
 			selectionUrl=`pcregrep -M "${var}\n.+" <<< "$page" | tail -n 1`;
 			egrep -qie '^https?:\/\/.+$' <<< "$selectionUrl" || selectionUrl="${urlBase}${selectionUrl}";
+			urlBase=`sed -Ee 's/^(.+\/).+?$/\1/gi' <<< "$selectionUrl"`;
 			segmentsFile=`wget -q -O - "$selectionUrl"`;
 			i=1;
 			if [ -f ${SID}_temp.vid ];
@@ -65,6 +67,7 @@ function processIndex(){
 							then
 								echo "[info]: got segment $i";
 							else
+								echo "${urlBase}${segmentUrl}";
 								echo "[exit]: fatal error when downloading segment $i" && exit 1
 						fi
 					else
