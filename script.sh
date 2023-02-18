@@ -7,8 +7,9 @@
 
 # TODO: help syntax output
 # TODO: output name can contain space/s
-# TODO: Use ETag for the m3u8 as a session identifier, then fall back to md5sum of the TS file, and only use $RANDOM as a last resort if no identifier can be found in the HTTP reply headers.
+# TODO: Use ETag for the m3u8 as a session identifier, then fall back to md5sum of the first TS segment file, and only use $RANDOM as a last resort if no identifier can be found in the HTTP reply headers.
 # TODO: doing the above to make continuing a download possible.
+# TODO: 
 url=`egrep -ioe 'https?:\/\/[^ ]+' <<< "$@"`;
 urlBase=`sed -Ee 's/^(.+\/).+?$/\1/gi' <<< "$url"`;
 ([ -z "$urlBase" ] || [ -z "$url" ]) && echo "[error]: malformed URL" && exit 1;
@@ -21,7 +22,7 @@ outputName=`egrep -ioe '(-o|--output)(=| )?(.+)( *)' <<< "$@" | sed -Ee 's/(-o|-
 [ -z "$outputName" ] && echo "[error]: \$outputName is empty, add -o OUTPUTNAME when calling the script" && exit;
 [ -z "$url" ] && echo "[error]: the calling string is not a valid http or https URL" && exit 1;
 function fetch(){
-	page=`wget -q -O - "$url"`;
+	page=`wget --timeout=30 -q -O - "$url"`;
 	[ -z "$page" ] && echo "[error]: error encountered when fetching the html for $1" && exit 1;
 }
 
@@ -54,7 +55,7 @@ function processIndex(){
 			selectionUrl=`pcregrep -M "${var}\n.+" <<< "$page" | tail -n 1`;
 			egrep -qie '^https?:\/\/.+$' <<< "$selectionUrl" || selectionUrl="${urlBase}${selectionUrl}";
 			urlBase=`sed -Ee 's/^(.+\/).+?$/\1/gi' <<< "$selectionUrl"`;
-			segmentsFile=`wget -q -O - "$selectionUrl"`;
+			segmentsFile=`wget --timeout=30 -q -O - "$selectionUrl"`;
 			i=1;
 			if [ -f ${SID}_temp.vid ];
 				then 
@@ -64,7 +65,7 @@ function processIndex(){
 			do
 				if (! egrep -qe '^https?://.+' <<< "$segmentUrl")
 					then
-						if (wget -q -O - "${urlBase}${segmentUrl}" >> ${SID}_temp.vid);
+						if (wget --timeout=30 -q -O - "${urlBase}${segmentUrl}" >> ${SID}_temp.vid);
 							then
 								echo "[info]: got segment $i";
 							else
@@ -72,7 +73,7 @@ function processIndex(){
 								echo "[exit]: fatal error when downloading segment $i" && exit 1
 						fi
 					else
-						if (wget -q -O - "$segmentUrl" >> ${SID}_temp.vid);
+						if (wget --timeout=30 -q -O - "$segmentUrl" >> ${SID}_temp.vid);
 							then
 								echo "[info]: got segment $i";
 							else
@@ -86,7 +87,7 @@ function processIndex(){
 		"segments" )
 			echo "[info]: index file is TS segment manifest"
 			selectionUrl=$url;
-			segmentsFile=`wget -q -O - "$selectionUrl"`;
+			segmentsFile=`wget --timeout=30 -q -O - "$selectionUrl"`;
 			i=1;
 			if [ -f ${SID}_temp.vid ];
 				then
@@ -97,14 +98,14 @@ function processIndex(){
 			do
 				if (! egrep -qe '^https?://.+' <<< "$segmentUrl")
 					then
-						if (wget -q -O - "${urlBase}${segmentUrl}" >> ${SID}_temp.vid);
+						if (wget --timeout=30 -q -O - "${urlBase}${segmentUrl}" >> ${SID}_temp.vid);
 							then
 								echo "[info]: got segment $i";
 							else
 								echo "[exit]: fatal error when downloading segment $i" && exit 1
 						fi
 					else
-						if (wget -q -O - "$segmentUrl" >> ${SID}_temp.vid);
+						if (wget --timeout=30 -q -O - "$segmentUrl" >> ${SID}_temp.vid);
 							then
 								echo "[info]: got segment $i";
 							else
