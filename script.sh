@@ -5,7 +5,6 @@
 # the second avails a series of .ts segments that are playbacked by the HLS player
 # as for the manifest content lines, they could complete absolute paths (a Fully Qualified domain and path) pointing to the resources,
 
-# TODO: help syntax output
 # TODO: Use ETag for the m3u8 as a session identifier, then fall back to md5sum of the first TS segment file, and only use $RANDOM as a last resort if no identifier can be found in the HTTP reply headers.
 # TODO: doing the above to make continuing a download possible.
 
