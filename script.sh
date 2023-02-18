@@ -6,11 +6,11 @@
 # as for the manifest content lines, they could complete absolute paths (a Fully Qualified domain and path) pointing to the resources,
 
 # TODO: help syntax output
-# TODO: output name can contain space/s
 # TODO: Use ETag for the m3u8 as a session identifier, then fall back to md5sum of the first TS segment file, and only use $RANDOM as a last resort if no identifier can be found in the HTTP reply headers.
 # TODO: doing the above to make continuing a download possible.
-# TODO: 
-url=`egrep -ioe 'https?:\/\/[^ ]+' <<< "$@"`;
+
+arguments="$@";
+url=`egrep -ioe 'https?:\/\/[^ ]+' <<< "${arguments}"`;
 urlBase=`sed -Ee 's/^(.+\/).+?$/\1/gi' <<< "$url"`;
 ([ -z "$urlBase" ] || [ -z "$url" ]) && echo "[error]: malformed URL" && exit 1;
 page="";
@@ -18,8 +18,32 @@ indexClass="";
 multivarChoice="";
 segmentsFile="";
 SID="$RANDOM";
-outputName=`egrep -ioe '(-o|--output)(=| )?(.+)( *)' <<< "$@" | sed -Ee 's/(-o|--output)(=| )?([^ ]+)/\3/gi';`
-[ -z "$outputName" ] && echo "[error]: \$outputName is empty, add -o OUTPUTNAME when calling the script" && exit;
+
+function argumentParse(){
+	# SYNTAX:
+	# argumentParse '-o' '--output'; 
+	# $1 must be the short form of the argument flag
+	# $2 must be the long form of the argument flag
+	# both argument flags are necessary
+	# if the flag gets repeated, only the first instance of either the short form or long form is returned
+	flagShort="$(egrep -ioe '^-[a-z0-9]$' <<< "$1")";
+	flagLong="$(egrep -ioe '^--[a-z0-9]{2,}$' <<< "$2")";
+	if ( [ -z "${flagShort}" ] || [ -z "${flagLong}" ] )
+	then
+		echo -e "[error]: argumentParse SYNTAX:\n\n\targumentParse -o --outout\n" && return 1;
+	fi
+	argument="$(egrep -ioe "(${flagLong}[ =]|${flagShort} +)(.+?)( +-[a-z0-9] *.*$| +--[a-z0-9]{2,}.*$|https?:\/\/[^ ]+.*$|$)" <<< "${arguments}" | sed -Ee "s/(${flagLong}[ =]|${flagShort} +)(.+?)( +-[a-z0-9] *.*$| +--[a-z0-9]{2,}.*$|https?:\/\/[^ ]+.*$)/\2/gi" -e "s/^(${flagLong}[ =]|$flagShort +)//g")";	
+	if [ -z "${argument}" ]
+	then
+		echo "[error]: problem extracting argument for flag ${flagShort}, ${flagLong}" && return 2;
+	else
+		echo "${argument}";
+		return 0;
+	fi
+}
+outputName="$(argumentParse -o --output)";
+[ $? != "0" ] && echo "[error]: \$outputName is empty, add -o OUTPUTNAME or --output OUTPUTNAME when calling the script" && exit;
+echo "[info]: the file will be saved as '${outputName}'";
 [ -z "$url" ] && echo "[error]: the calling string is not a valid http or https URL" && exit 1;
 function fetch(){
 	page=`wget --timeout=30 -q -O - "$url"`;
