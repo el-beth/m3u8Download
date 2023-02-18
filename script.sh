@@ -10,6 +10,13 @@
 # TODO: doing the above to make continuing a download possible.
 
 arguments="$@";
+if ( egrep -qe '( -h| --help)' <<< "${arguments}" )
+then
+	# help message goes here
+	echo -e "\nSYNTAX:\n\tscript.sh [OPTION]... [URL]\n\nThe script must be called with an output name\n\n\t-o,  --output=FILE         the stream will be saved to FILE" && exit 0;
+fi
+
+
 url=`egrep -ioe 'https?:\/\/[^ ]+' <<< "${arguments}"`;
 urlBase=`sed -Ee 's/^(.+\/).+?$/\1/gi' <<< "$url"`;
 ([ -z "$urlBase" ] || [ -z "$url" ]) && echo "[error]: malformed URL" && exit 1;
@@ -19,13 +26,14 @@ multivarChoice="";
 segmentsFile="";
 SID="$RANDOM";
 
+
 function argumentParse(){
 	# SYNTAX:
 	# argumentParse '-o' '--output'; 
 	# $1 must be the short form of the argument flag
 	# $2 must be the long form of the argument flag
 	# both argument flags are necessary
-	# if the flag gets repeated, only the first instance of either the short form or long form is returned
+	# if the flag gets repeated, only the first argument of either the short form or long form is returned
 	flagShort="$(egrep -ioe '^-[a-z0-9]$' <<< "$1")";
 	flagLong="$(egrep -ioe '^--[a-z0-9]{2,}$' <<< "$2")";
 	if ( [ -z "${flagShort}" ] || [ -z "${flagLong}" ] )
@@ -43,7 +51,13 @@ function argumentParse(){
 }
 outputName="$(argumentParse -o --output)";
 [ $? != "0" ] && echo "[error]: \$outputName is empty, add -o OUTPUTNAME or --output OUTPUTNAME when calling the script" && exit;
+
+if [ -f "${outputName}" ]
+then
+	echo "[error]: the filename '${outputName}' is already in use" && exit 1;
+fi
 echo "[info]: the file will be saved as '${outputName}'";
+
 [ -z "$url" ] && echo "[error]: the calling string is not a valid http or https URL" && exit 1;
 function fetch(){
 	page=`wget --timeout=30 -q -O - "$url"`;
