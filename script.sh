@@ -10,11 +10,14 @@
 # TODO: doing the above to make continuing a download possible.
 
 arguments="$@";
-if ( egrep -qe '( -h| --help)' <<< "${arguments}" )
-then
-	# help message goes here
-	echo -e "\nSYNTAX:\n\tscript.sh [OPTION]... [URL]\n\nThe script must be called with an output name\n\n\t-o,  --output=FILE         the stream will be saved to FILE" && exit 0;
-fi
+function showHelp(){
+	if ( egrep -qe '( *-h| *--help)' <<< "${arguments}" )
+	then
+		# help message goes here
+		echo -e "\nSYNTAX:\n\tscript.sh [OPTION]... [URL]\n\nThe script must be called with an output name\n\n\t-o,  --output=FILE         the stream will be saved to FILE\n\t-h,  --help                show this help message and exit" && exit 0;
+	fi
+}
+showHelp;
 
 
 url=`egrep -ioe 'https?:\/\/[^ ]+' <<< "${arguments}"`;
