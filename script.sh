@@ -7,6 +7,11 @@
 
 # TODO: Use ETag for the m3u8 as a session identifier, then fall back to md5sum of the first TS segment file, and only use $RANDOM as a last resort if no identifier can be found in the HTTP reply headers.
 # TODO: doing the above to make continuing a download possible.
+# TODO: speed limit arg
+# TODO: accept list instead of a single URL
+#       this can be achieved by reading the file and recursively calling this script with each of the URL
+#       with all other applicable arguments
+
 
 arguments="$@";
 function showHelp(){
